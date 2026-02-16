@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.models.playback.controllers;
 
 import android.annotation.SuppressLint;
 import android.util.Pair;
+import android.view.KeyEvent;
 
 import com.liskovsoft.mediaserviceinterfaces.MediaItemService;
 import com.liskovsoft.mediaserviceinterfaces.ServiceManager;
@@ -282,11 +283,21 @@ public class VideoLoaderController extends BasePlayerController {
             return;
         }
 
-        if (getPlayerData().isSleepTimerEnabled() && System.currentTimeMillis() - mSleepTimerStartMs > 2 * 60 * 60 * 1_000) {
+        int sleepTimerTimeoutMs = getPlayerData().getSleepTimerTimeoutMs();
+        if (sleepTimerTimeoutMs > 0 && System.currentTimeMillis() - mSleepTimerStartMs > sleepTimerTimeoutMs) {
             getPlayer().setPlayWhenReady(false);
             getPlayer().setTitle(getContext().getString(R.string.sleep_timer));
             getPlayer().showOverlay(true);
             Helpers.enableScreensaver(getActivity());
+            
+            // Put device into standby/sleep mode
+            // Note: Using keyevent approach as PowerManager.goToSleep() requires DEVICE_POWER permission
+            // which is not available to regular apps. This is the standard approach for Android TV devices.
+            try {
+                Runtime.getRuntime().exec(new String[]{"input", "keyevent", String.valueOf(KeyEvent.KEYCODE_SLEEP)});
+            } catch (Exception e) {
+                // If exec fails, ignore - at least we paused playback
+            }
         }
     }
 

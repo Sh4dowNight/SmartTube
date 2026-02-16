@@ -23,6 +23,7 @@ import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class PlayerSettingsPresenter extends BasePresenter<Void> {
     private final PlayerData mPlayerData;
@@ -76,6 +77,7 @@ public class PlayerSettingsPresenter extends BasePresenter<Void> {
         appendEndingTimeCategory(settingsPresenter);
         appendPixelRatioCategory(settingsPresenter);
         //appendPlayerExitCategory(settingsPresenter);
+        appendSleepTimerCategory(settingsPresenter);
         appendMiscCategory(settingsPresenter);
         appendDeveloperCategory(settingsPresenter);
 
@@ -532,11 +534,6 @@ public class PlayerSettingsPresenter extends BasePresenter<Void> {
                 option -> mPlayerTweaksData.setChapterNotificationEnabled(option.isSelected()),
                 mPlayerTweaksData.isChapterNotificationEnabled()));
 
-        options.add(UiOptionItem.from(getContext().getString(R.string.sleep_timer),
-                //getContext().getString(R.string.sleep_timer_desc),
-                option -> mPlayerData.setSleepTimerEnabled(option.isSelected()),
-                mPlayerData.isSleepTimerEnabled()));
-
         options.add(UiOptionItem.from(getContext().getString(R.string.search_background_playback),
                 option -> mSearchData.setTempBackgroundModeEnabled(option.isSelected()),
                 mSearchData.isTempBackgroundModeEnabled()));
@@ -642,6 +639,43 @@ public class PlayerSettingsPresenter extends BasePresenter<Void> {
                 mPlayerTweaksData.isRealChannelIconEnabled()));
 
         settingsPresenter.appendCheckedCategory(getContext().getString(R.string.player_other), options);
+    }
+
+    @SuppressLint("StringFormatMatches")
+    private void appendSleepTimerCategory(AppDialogPresenter settingsPresenter) {
+        List<OptionItem> options = new ArrayList<>();
+
+        int currentTimeoutMs = mPlayerData.getSleepTimerTimeoutMs();
+
+        // Off option
+        options.add(UiOptionItem.from(
+                getContext().getString(R.string.option_disabled),
+                option -> mPlayerData.setSleepTimerTimeoutMs(0),
+                currentTimeoutMs == 0));
+
+        // 30 minutes to 6 hours in 30-minute steps
+        for (int i = 1; i <= 12; i++) {
+            int timeoutMs = i * 30 * 60 * 1_000;
+            String label;
+            if (i == 1) {
+                // 30 minutes
+                label = getContext().getString(R.string.screen_dimming_timeout_min, 30);
+            } else if (i % 2 == 0) {
+                // Whole hours: 1h, 2h, 3h, 4h, 5h, 6h
+                int hours = i / 2;
+                label = String.format(Locale.US, "%d h", hours);
+            } else {
+                // Half hours: 1.5h, 2.5h, 3.5h, 4.5h, 5.5h
+                float hours = i / 2.0f;
+                label = String.format(Locale.US, "%.1f h", hours);
+            }
+            options.add(UiOptionItem.from(
+                    label,
+                    option -> mPlayerData.setSleepTimerTimeoutMs(timeoutMs),
+                    currentTimeoutMs == timeoutMs));
+        }
+
+        settingsPresenter.appendRadioCategory(getContext().getString(R.string.sleep_timer), options);
     }
 
     private void appendPlayerExitCategory(AppDialogPresenter settingsPresenter) {
