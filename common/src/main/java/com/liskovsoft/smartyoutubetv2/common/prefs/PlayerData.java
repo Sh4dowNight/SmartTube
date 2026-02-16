@@ -72,7 +72,7 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
     private String mSubtitleLanguage;
     private boolean mIsAllSpeedEnabled;
     private int mPlaybackMode;
-    private boolean mIsSleepTimerEnabled;
+    private int mSleepTimerTimeoutMs;
     private boolean mIsQualityInfoEnabled;
     private boolean mIsSpeedPerVideoEnabled;
     private boolean mIsTimeCorrectionEnabled;
@@ -655,11 +655,21 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
     }
 
     public boolean isSleepTimerEnabled() {
-        return mIsSleepTimerEnabled;
+        return mSleepTimerTimeoutMs > 0;
     }
 
     public void setSleepTimerEnabled(boolean enable) {
-        mIsSleepTimerEnabled = enable;
+        // Backward compatibility: convert boolean to timeout
+        mSleepTimerTimeoutMs = enable ? 2 * 60 * 60 * 1_000 : 0;
+        persistState();
+    }
+
+    public int getSleepTimerTimeoutMs() {
+        return mSleepTimerTimeoutMs;
+    }
+
+    public void setSleepTimerTimeoutMs(int timeoutMs) {
+        mSleepTimerTimeoutMs = timeoutMs;
         persistState();
     }
 
@@ -798,7 +808,9 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
         // repeat mode was here
         // didn't remember what was there
         mIsLegacyCodecsForced = Helpers.parseBoolean(split, 24, false);
-        mIsSleepTimerEnabled = Helpers.parseBoolean(split, 25, false);
+        // Migration: convert old boolean sleep timer to new timeout format
+        boolean oldSleepTimerEnabled = Helpers.parseBoolean(split, 25, false);
+        mSleepTimerTimeoutMs = Helpers.parseInt(split, 25, oldSleepTimerEnabled ? 2 * 60 * 60 * 1_000 : 0);
         // old player tweaks
         mIsQualityInfoEnabled = Helpers.parseBoolean(split, 28, true);
         mIsSpeedPerVideoEnabled = Helpers.parseBoolean(split, 29, false);
@@ -863,7 +875,7 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
                 mVideoFormat, mAudioFormat, mSubtitleFormat,
                 mVideoBufferType, mSubtitleStyleIndex, mResizeMode, mSpeed,
                 mIsAfrEnabled, mIsAfrFpsCorrectionEnabled, mIsAfrResSwitchEnabled, null, mAudioDelayMs, mIsAllSpeedEnabled, null, null,
-                mIsLegacyCodecsForced, mIsSleepTimerEnabled, null, null, // old player tweaks
+                mIsLegacyCodecsForced, mSleepTimerTimeoutMs, null, null, // old player tweaks
                 mIsQualityInfoEnabled, mIsSpeedPerVideoEnabled, mAspectRatio, mIsGlobalClockEnabled, mIsTimeCorrectionEnabled,
                 mIsGlobalEndingTimeEnabled, mIsEndingTimeEnabled, mIsDoubleRefreshRateEnabled, mIsSeekConfirmPlayEnabled,
                 mStartSeekIncrementMs, null, mSubtitleScale, mPlayerVolume, mIsTooltipsEnabled, mSubtitlePosition, mIsNumberKeySeekEnabled,
