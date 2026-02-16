@@ -809,8 +809,16 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
         // didn't remember what was there
         mIsLegacyCodecsForced = Helpers.parseBoolean(split, 24, false);
         // Migration: convert old boolean sleep timer to new timeout format
-        boolean oldSleepTimerEnabled = Helpers.parseBoolean(split, 25, false);
-        mSleepTimerTimeoutMs = Helpers.parseInt(split, 25, oldSleepTimerEnabled ? 2 * 60 * 60 * 1_000 : 0);
+        // Try parsing as integer first (new format), if that fails or is 0/1, treat as old boolean format
+        int parsedTimeout = Helpers.parseInt(split, 25, -1);
+        if (parsedTimeout == -1 || parsedTimeout == 0 || parsedTimeout == 1) {
+            // Old boolean format or unset - convert boolean to timeout
+            boolean oldSleepTimerEnabled = parsedTimeout == 1 || (parsedTimeout == -1 && Helpers.parseBoolean(split, 25, false));
+            mSleepTimerTimeoutMs = oldSleepTimerEnabled ? 2 * 60 * 60 * 1_000 : 0;
+        } else {
+            // New integer format - use as-is
+            mSleepTimerTimeoutMs = parsedTimeout;
+        }
         // old player tweaks
         mIsQualityInfoEnabled = Helpers.parseBoolean(split, 28, true);
         mIsSpeedPerVideoEnabled = Helpers.parseBoolean(split, 29, false);

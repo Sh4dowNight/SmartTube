@@ -291,6 +291,8 @@ public class VideoLoaderController extends BasePlayerController {
             Helpers.enableScreensaver(getActivity());
             
             // Put device into standby/sleep mode
+            // Note: Using keyevent approach as PowerManager.goToSleep() requires DEVICE_POWER permission
+            // which is not available to regular apps. This is the standard approach for Android TV devices.
             try {
                 Runtime.getRuntime().exec(new String[]{"input", "keyevent", String.valueOf(KeyEvent.KEYCODE_SLEEP)});
             } catch (Exception e) {

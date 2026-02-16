@@ -23,6 +23,7 @@ import com.liskovsoft.youtubeapi.service.internal.MediaServiceData;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class PlayerSettingsPresenter extends BasePresenter<Void> {
     private final PlayerData mPlayerData;
@@ -662,11 +663,11 @@ public class PlayerSettingsPresenter extends BasePresenter<Void> {
             } else if (i % 2 == 0) {
                 // Whole hours: 1h, 2h, 3h, 4h, 5h, 6h
                 int hours = i / 2;
-                label = String.format("%d h", hours);
+                label = String.format(Locale.US, "%d h", hours);
             } else {
                 // Half hours: 1.5h, 2.5h, 3.5h, 4.5h, 5.5h
                 float hours = i / 2.0f;
-                label = String.format("%.1f h", hours);
+                label = String.format(Locale.US, "%.1f h", hours);
             }
             options.add(UiOptionItem.from(
                     label,
